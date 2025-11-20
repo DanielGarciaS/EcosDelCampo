@@ -33,7 +33,6 @@ export default function CompradorHomeScreen({ navigation }) {
   const cargarProductos = async () => {
     try {
       const response = await axios.get(ENDPOINTS.PRODUCTS);
-
       if (response.data.success) {
         setProductos(response.data.data);
       }
@@ -63,7 +62,6 @@ export default function CompradorHomeScreen({ navigation }) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       if (response.data.success) {
         Alert.alert('Éxito', `${producto.nombre} agregado al carrito`);
       }
@@ -83,7 +81,6 @@ export default function CompradorHomeScreen({ navigation }) {
     const matchSearch =
       producto.nombre.toLowerCase().includes(search.toLowerCase()) ||
       producto.descripcion?.toLowerCase().includes(search.toLowerCase());
-
     return matchCategoria && matchSearch;
   });
 
@@ -96,9 +93,7 @@ export default function CompradorHomeScreen({ navigation }) {
             {item.categoria.charAt(0).toUpperCase() + item.categoria.slice(1)}
           </Text>
           {item.descripcion && (
-            <Text style={styles.productoDescripcion} numberOfLines={2}>
-              {item.descripcion}
-            </Text>
+            <Text style={styles.productoDescripcion}>{item.descripcion}</Text>
           )}
         </View>
       </View>
@@ -111,13 +106,12 @@ export default function CompradorHomeScreen({ navigation }) {
             {item.cantidad} {item.unidad} disponibles
           </Text>
         </View>
-
         <TouchableOpacity
           style={styles.botonAgregar}
           onPress={() => agregarAlCarrito(item)}
           disabled={item.cantidad === 0}
         >
-          <Ionicons name="cart" size={20} color={Colors.white} />
+          <Ionicons name="cart-outline" size={18} color={Colors.white} />
           <Text style={styles.botonAgregarText}>Agregar</Text>
         </TouchableOpacity>
       </View>
@@ -135,14 +129,14 @@ export default function CompradorHomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* ✅ ENCABEZADO LIMPIO Y CENTRADO */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>¡Hola, {user?.nombre}! 🛒</Text>
-          <Text style={styles.subtitle}>¿Qué necesitas hoy?</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerGreeting}>¡Hola, {user?.nombre}! 🛒</Text>
+          <Text style={styles.headerSubtitle}>¿Qué necesitas hoy?</Text>
         </View>
         <TouchableOpacity
-          style={styles.cartButton}
+          style={styles.cartIcon}
           onPress={() => navigation.navigate('Carrito')}
         >
           <Ionicons name="cart" size={28} color={Colors.white} />
@@ -151,56 +145,49 @@ export default function CompradorHomeScreen({ navigation }) {
 
       {/* Buscador */}
       <View style={styles.searchContainer}>
-        <Ionicons
-          name="search"
-          size={20}
-          color={Colors.textSecondary}
-          style={styles.searchIcon}
-        />
+        <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Buscar productos..."
           value={search}
           onChangeText={setSearch}
+          placeholderTextColor={Colors.textSecondary}
         />
       </View>
 
       {/* Filtro de categorías */}
-      <View style={styles.categoriasContainer}>
-        <FlatList
-          horizontal
-          data={categorias}
-          renderItem={({ item }) => (
-            <TouchableOpacity
+      <FlatList
+        horizontal
+        data={categorias}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[
+              styles.categoriaChip,
+              categoriaSeleccionada === item && styles.categoriaChipActive,
+            ]}
+            onPress={() => setCategoriaSeleccionada(item)}
+          >
+            <Text
               style={[
-                styles.categoriaChip,
-                categoriaSeleccionada === item && styles.categoriaChipActive,
+                styles.categoriaChipText,
+                categoriaSeleccionada === item && styles.categoriaChipTextActive,
               ]}
-              onPress={() => setCategoriaSeleccionada(item)}
             >
-              <Text
-                style={[
-                  styles.categoriaChipText,
-                  categoriaSeleccionada === item && styles.categoriaChipTextActive,
-                ]}
-              >
-                {item.charAt(0).toUpperCase() + item.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          )}
-          keyExtractor={(item) => item}
-          showsHorizontalScrollIndicator={false}
-        />
-      </View>
+              {item.charAt(0).toUpperCase() + item.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        )}
+        keyExtractor={(item) => item}
+        contentContainerStyle={styles.categoriasContainer}
+        showsHorizontalScrollIndicator={false}
+      />
 
       {/* Lista de productos */}
       {productosFiltrados.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="basket-outline" size={80} color={Colors.gray} />
+          <Ionicons name="sad-outline" size={80} color={Colors.textSecondary} />
           <Text style={styles.emptyTitle}>No hay productos disponibles</Text>
-          <Text style={styles.emptySubtitle}>
-            Intenta con otra categoría o búsqueda
-          </Text>
+          <Text style={styles.emptySubtitle}>Intenta con otra categoría o búsqueda</Text>
         </View>
       ) : (
         <FlatList
@@ -209,7 +196,11 @@ export default function CompradorHomeScreen({ navigation }) {
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContainer}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.comprador]}
+            />
           }
         />
       )}
@@ -234,88 +225,95 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: Colors.comprador,
-    padding: 20,
-    paddingTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  greeting: {
-    fontSize: 24,
+  headerTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
     color: Colors.white,
-    marginBottom: 5,
+    textAlign: 'center',
   },
-  subtitle: {
+  headerSubtitle: {
     fontSize: 14,
     color: Colors.white,
-    opacity: 0.9,
+    opacity: 0.85,
+    marginTop: 2,
+    textAlign: 'center',
   },
-  cartButton: {
+
+  cartIcon: {
     padding: 8,
+    marginLeft: 16,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
-    margin: 15,
-    paddingHorizontal: 15,
+    margin: 16,
+    paddingHorizontal: 12,
     borderRadius: 12,
+    height: 48,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
   },
   searchIcon: {
-    marginRight: 10,
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 12,
     fontSize: 16,
+    color: Colors.textPrimary,
   },
   categoriasContainer: {
-    paddingHorizontal: 15,
-    marginBottom: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
   },
   categoriaChip: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: Colors.white,
-    marginRight: 10,
     borderWidth: 1,
     borderColor: Colors.lightGray,
+    marginHorizontal: 4,
   },
   categoriaChipActive: {
     backgroundColor: Colors.comprador,
     borderColor: Colors.comprador,
   },
   categoriaChipText: {
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.textPrimary,
+    fontWeight: '500',
   },
   categoriaChipTextActive: {
     color: Colors.white,
     fontWeight: 'bold',
   },
   listContainer: {
-    padding: 15,
+    padding: 12,
   },
   productoCard: {
     backgroundColor: Colors.white,
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
   },
   productoHeader: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   productoInfo: {
     flex: 1,
@@ -324,7 +322,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   productoCategoria: {
     fontSize: 12,
@@ -335,6 +333,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     alignSelf: 'flex-start',
     marginBottom: 8,
+    fontWeight: '500',
   },
   productoDescripcion: {
     fontSize: 14,
@@ -345,15 +344,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: 12,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: Colors.lightGray,
   },
   productoPrecio: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: Colors.comprador,
+    marginBottom: 4,
   },
   productoUnidad: {
     fontSize: 12,
@@ -367,16 +367,16 @@ const styles = StyleSheet.create({
   botonAgregar: {
     flexDirection: 'row',
     backgroundColor: Colors.comprador,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   botonAgregarText: {
     color: Colors.white,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,

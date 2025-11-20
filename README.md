@@ -2,8 +2,9 @@
 
 Aplicación móvil para conectar agricultores locales con compradores, facilitando la venta directa de productos del campo.
 
+---
 
-## 🎯 Funcionalidades Implementadas - Sprint 1
+## 🎯 Funcionalidades Implementadas
 
 ### 🔐 Autenticación
 - Registro de usuarios (Agricultor/Comprador)
@@ -24,6 +25,17 @@ Aplicación móvil para conectar agricultores locales con compradores, facilitan
 - Carrito de compras funcional
 - Gestión de cantidades en tiempo real
 
+### 📦 Órdenes y Pedidos
+- Visualización de historial de pedidos
+- Seguimiento de estado del pedido
+- Detalles de cada compra
+
+### 👤 Perfil
+- Gestión y edición del perfil
+- Logout seguro
+
+---
+
 ## 🛠️ Tecnologías Utilizadas
 
 ### Frontend
@@ -41,28 +53,22 @@ Aplicación móvil para conectar agricultores locales con compradores, facilitan
 - **JWT** - Autenticación
 - **bcrypt** - Encriptación de contraseñas
 
-## 📂 Estructura del Proyecto
-EcosDelCampoApp/
-├── src/
-│ ├── components/ # Componentes reutilizables
-│ ├── constants/ # Colores, endpoints
-│ ├── context/ # Context API (Auth)
-│ ├── navigation/ # Configuración de navegación
-│ └── screens/ # Pantallas de la app
-│ ├── auth/ # Login, Registro
-│ ├── agricultor/ # Pantallas del agricultor
-│ └── comprador/ # Pantallas del comprador
-├── App.js # Punto de entrada
-└── package.json
+---
+
+## ⚡ Cómo correr el proyecto
+
+1. Clona el repositorio
+2. Instala dependencias: `npm install` (backend) y `npx expo install` (frontend)
+3. Configura variables de entorno del backend
+4. Inicia el backend con `npm run dev`
+5. En `/frontend`, ejecuta: `npx expo start`
+6. Escanea el código QR con la app Expo Go o usa un emulador
 
 
-## 🚀 Instalación y Ejecución
 
-### Prerrequisitos
-- Node.js (v16 o superior)
-- Expo CLI
-- MongoDB
-- Expo Go (en tu dispositivo móvil)
+## 🚧 Roadmap
 
-### Backend
-1. Clona el repositorio del backend.
+- Notificaciones push para pedidos y status
+- Métodos de pago integrados
+- Historial de transacciones para Agricultores
+- Valoraciones y comentarios de productos

@@ -3,8 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { ENDPOINTS } from '../constants/endpoints';
 
-axios.defaults.timeout = 15000; // 10 segundos
-
+axios.defaults.timeout = 15000;
 
 const AuthContext = createContext();
 
@@ -34,52 +33,63 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-  try {
-    console.log('🔄 Intentando login a:', ENDPOINTS.LOGIN);
-    const response = await axios.post(ENDPOINTS.LOGIN, {
-      email,
-      password,
-    });
-
-    console.log('✅ Respuesta del servidor:', response.data);
-
-    if (response.data.success) {
-      const { token: newToken, ...userData } = response.data.data;
-      
-      await SecureStore.setItemAsync('token', newToken);
-      await SecureStore.setItemAsync('user', JSON.stringify(userData));
-
-      setToken(newToken);
-      setUser(userData);
-
-      return { success: true };
-    }
-  } catch (error) {
-    console.error('❌ Error completo:', error);
-    console.error('❌ Error response:', error.response?.data);
-    
-    return {
-      success: false,
-      message: error.response?.data?.message || 
-               error.message || 
-               'No se pudo conectar con el servidor. Verifica tu conexión.',
-    };
-  }
-};
-
-
-  const register = async (userData) => {
     try {
-        console.log('🔄 Intentando register a:', ENDPOINTS.REGISTER);
+      console.log('🔄 Intentando login a:', ENDPOINTS.LOGIN);
+      
+      const response = await axios.post(ENDPOINTS.LOGIN, {
+        email,
+        password,
+      });
+
+      console.log('✅ Respuesta del servidor:', response.data);
+
+      if (response.data.success) {
+        const { token: newToken, ...userData } = response.data.data;
+
+        await SecureStore.setItemAsync('token', newToken);
+        await SecureStore.setItemAsync('user', JSON.stringify(userData));
+
+        setToken(newToken);
+        setUser(userData);
+
+        return { success: true };
+      }
+    } catch (error) {
+      console.error('❌ Error completo:', error);
+      console.error('❌ Error response:', error.response?.data);
+
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          error.message ||
+          'No se pudo conectar con el servidor. Verifica tu conexión.',
+      };
+    }
+  };
+
+  // ← CORREGIDA
+  const register = async (nombre, email, password, rol, telefono) => {
+    try {
+      console.log('🔄 Intentando register a:', ENDPOINTS.REGISTER);
+
+      const userData = {
+        nombre,
+        email,
+        password,
+        rol,
+        telefono,
+      };
+
+      console.log('📤 Enviando datos:', userData);
+
       const response = await axios.post(ENDPOINTS.REGISTER, userData);
 
-       console.log('✅ Respuesta del servidor:', response.data);
-
-
+      console.log('✅ Respuesta del servidor:', response.data);
 
       if (response.data.success) {
         const { token: newToken, ...user } = response.data.data;
-        
+
         await SecureStore.setItemAsync('token', newToken);
         await SecureStore.setItemAsync('user', JSON.stringify(user));
 
@@ -89,14 +99,15 @@ export const AuthProvider = ({ children }) => {
         return { success: true };
       }
     } catch (error) {
-         console.error('❌ Error completo:', error);
-    console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error completo:', error);
+      console.error('❌ Error response:', error.response?.data);
 
       return {
         success: false,
-        message: error.response?.data?.message || 
-               error.message || 
-               'No se pudo conectar con el servidor. Verifica tu conexión.',
+        message:
+          error.response?.data?.message ||
+          error.message ||
+          'No se pudo conectar con el servidor. Verifica tu conexión.',
       };
     }
   };
@@ -105,6 +116,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await SecureStore.deleteItemAsync('token');
       await SecureStore.deleteItemAsync('user');
+
       setToken(null);
       setUser(null);
     } catch (error) {
@@ -114,6 +126,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    setUser,
     token,
     loading,
     login,
@@ -122,13 +135,20 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: !!token,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // ← CORREGIDA: Ahora sí retorna el Provider correctamente
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error('useAuth debe usarse dentro de AuthProvider');
   }
+
   return context;
 };

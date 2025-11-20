@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "EcosDelCampoApp",
-    "slug": "EcosDelCampoApp",
+    "slug": "ecos-del-campo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,13 +13,15 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.daniel.ecosdelcampo"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.daniel.ecosdelcampo",
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -27,6 +29,11 @@
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f06f512c-8e8d-404a-8c3c-783afd2cddec"
+      }
+    }
   }
 }

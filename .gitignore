@@ -1,5 +1,8 @@
-# Node modules
+# Dependencias
 node_modules/
+
+# Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -10,27 +13,30 @@ yarn-error.log*
 dist/
 web-build/
 
-# Environment variables
-.env
-.env.local
-.env.production
+# Variables de entorno
+.env*
+!.env.example  # permite versionar un archivo de ejemplo
 
-# IDE
+# IDEs y editores
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
+# Archivos temporales y del sistema
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-
-# Testing
+# Build y cobertura
+build/
 coverage/
 
-# Build
-build/
+# Archivos específicos del proyecto
+.eas/
+.App/
+Users.txt  # si no quieres versionarlo
+
+# Ignorar por extensión si es necesario
+*.bak
+*.tmp

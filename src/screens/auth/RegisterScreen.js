@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import Colors from '../../constants/colors';
+import { validatePasswordStrength } from '../../utils/passwordValidator';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RegisterScreen({ navigation }) {
   const [nombre, setNombre] = useState('');
@@ -22,7 +24,20 @@ export default function RegisterScreen({ navigation }) {
   const [telefono, setTelefono] = useState('');
   const [rol, setRol] = useState('comprador');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(null);
+
   const { register } = useAuth();
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    if (text.length > 0) {
+      setPasswordStrength(validatePasswordStrength(text));
+    } else {
+      setPasswordStrength(null);
+    }
+  };
 
   const handleRegister = async () => {
     // Validaciones
@@ -36,25 +51,39 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+    // Validar contraseña segura
+    if (!passwordStrength || !passwordStrength.isStrong) {
+      Alert.alert(
+        'Contraseña débil',
+        'La contraseña debe tener:\n• Al menos 8 caracteres\n• Mayúsculas\n• Minúsculas\n• Números\n• Caracteres especiales'
+      );
+      return;
+    }
+
+    // Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Por favor ingresa un email válido');
       return;
     }
 
     setLoading(true);
-    const result = await register({
-      nombre: nombre.trim(),
-      email: email.toLowerCase().trim(),
-      password,
-      rol,
-      telefono: telefono.trim(),
-    });
+    const result = await register(nombre, email.toLowerCase().trim(), password, rol, telefono);
     setLoading(false);
 
     if (!result.success) {
       Alert.alert('Error', result.message);
     }
-    // Si es exitoso, la navegación se maneja automáticamente
+  };
+
+  const getStrengthBarColor = () => {
+    if (!passwordStrength) return '#e0e0e0';
+    return passwordStrength.color;
+  };
+
+  const getStrengthPercentage = () => {
+    if (!passwordStrength) return 0;
+    return (passwordStrength.strength / 5) * 100;
   };
 
   return (
@@ -62,138 +91,209 @@ export default function RegisterScreen({ navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.emoji}>🌾</Text>
-          <Text style={styles.title}>Crear Cuenta</Text>
-          <Text style={styles.subtitle}>Únete a Ecos del Campo</Text>
+          <Text style={styles.title}>Ecos del Campo</Text>
+          <Text style={styles.subtitle}>Crea tu cuenta</Text>
         </View>
 
+        {/* Form */}
         <View style={styles.form}>
-          {/* Selector de Rol */}
-          <Text style={styles.label}>¿Qué tipo de cuenta deseas?</Text>
-          <View style={styles.rolContainer}>
-            <TouchableOpacity
-              style={[
-                styles.rolButton,
-                rol === 'comprador' && styles.rolButtonActiveComprador,
-              ]}
-              onPress={() => setRol('comprador')}
-              disabled={loading}
-            >
-              <Text
-                style={[
-                  styles.rolButtonText,
-                  rol === 'comprador' && styles.rolButtonTextActive,
-                ]}
-              >
-                🛒 Comprador
-              </Text>
-            </TouchableOpacity>
+          {/* Nombre */}
+          <View style={styles.inputContainer}>
+            <Ionicons name="person-outline" size={20} color={Colors.textSecondary} />
+            <TextInput
+              style={styles.input}
+              placeholder="Nombre completo"
+              value={nombre}
+              onChangeText={setNombre}
+              editable={!loading}
+            />
+          </View>
 
-            <TouchableOpacity
-              style={[
-                styles.rolButton,
-                rol === 'agricultor' && styles.rolButtonActiveAgricultor,
-              ]}
-              onPress={() => setRol('agricultor')}
-              disabled={loading}
-            >
-              <Text
+          {/* Email */}
+          <View style={styles.inputContainer}>
+            <Ionicons name="mail-outline" size={20} color={Colors.textSecondary} />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!loading}
+            />
+          </View>
+
+          {/* Teléfono */}
+          <View style={styles.inputContainer}>
+            <Ionicons name="call-outline" size={20} color={Colors.textSecondary} />
+            <TextInput
+              style={styles.input}
+              placeholder="Teléfono"
+              value={telefono}
+              onChangeText={setTelefono}
+              keyboardType="phone-pad"
+              editable={!loading}
+            />
+          </View>
+
+          {/* Rol */}
+          <View style={styles.rolContainer}>
+            <Text style={styles.rolLabel}>Registrarse como:</Text>
+            <View style={styles.rolButtons}>
+              <TouchableOpacity
                 style={[
-                  styles.rolButtonText,
-                  rol === 'agricultor' && styles.rolButtonTextActive,
+                  styles.rolBtn,
+                  rol === 'comprador' && styles.rolBtnActive
                 ]}
+                onPress={() => setRol('comprador')}
+                disabled={loading}
               >
-                🌾 Agricultor
-              </Text>
+                <Ionicons
+                  name="cart-outline"
+                  size={18}
+                  color={rol === 'comprador' ? '#fff' : Colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.rolBtnText,
+                    rol === 'comprador' && styles.rolBtnTextActive
+                  ]}
+                >
+                  Comprador
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.rolBtn,
+                  rol === 'agricultor' && styles.rolBtnActive
+                ]}
+                onPress={() => setRol('agricultor')}
+                disabled={loading}
+              >
+                <Ionicons
+                  name="leaf-outline"
+                  size={18}
+                  color={rol === 'agricultor' ? '#fff' : Colors.textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.rolBtnText,
+                    rol === 'agricultor' && styles.rolBtnTextActive
+                  ]}
+                >
+                  Agricultor
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Contraseña */}
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} />
+            <TextInput
+              style={styles.input}
+              placeholder="Contraseña"
+              value={password}
+              onChangeText={handlePasswordChange}
+              secureTextEntry={!showPassword}
+              editable={!loading}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons
+                name={showPassword ? 'eye-outline' : 'eye-off-outline'}
+                size={20}
+                color={Colors.textSecondary}
+              />
             </TouchableOpacity>
           </View>
 
-          {/* Campos del formulario */}
-          <Text style={styles.label}>Nombre completo *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Juan Pérez"
-            value={nombre}
-            onChangeText={setNombre}
-            editable={!loading}
-            placeholderTextColor={Colors.gray}
-          />
+          {/* Indicador de Fortaleza */}
+          {password.length > 0 && passwordStrength && (
+            <View style={styles.strengthContainer}>
+              <View style={styles.strengthBar}>
+                <View
+                  style={[
+                    styles.strengthBarFill,
+                    {
+                      width: `${getStrengthPercentage()}%`,
+                      backgroundColor: getStrengthBarColor()
+                    }
+                  ]}
+                />
+              </View>
+              <Text style={[styles.strengthText, { color: passwordStrength.color }]}>
+                Fortaleza: {passwordStrength.message}
+              </Text>
 
-          <Text style={styles.label}>Email *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="tu@email.com"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            editable={!loading}
-            placeholderTextColor={Colors.gray}
-          />
+              {/* Requisitos */}
+              <View style={styles.requirementsContainer}>
+                <RequirementCheck
+                  label="Mínimo 8 caracteres"
+                  met={passwordStrength.criteria.length}
+                />
+                <RequirementCheck
+                  label="Mayúsculas (A-Z)"
+                  met={passwordStrength.criteria.uppercase}
+                />
+                <RequirementCheck
+                  label="Minúsculas (a-z)"
+                  met={passwordStrength.criteria.lowercase}
+                />
+                <RequirementCheck
+                  label="Números (0-9)"
+                  met={passwordStrength.criteria.number}
+                />
+                <RequirementCheck
+                  label="Caracteres especiales (!@#$...)"
+                  met={passwordStrength.criteria.special}
+                />
+              </View>
+            </View>
+          )}
 
-          <Text style={styles.label}>Teléfono</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="3331234567"
-            value={telefono}
-            onChangeText={setTelefono}
-            keyboardType="phone-pad"
-            editable={!loading}
-            placeholderTextColor={Colors.gray}
-          />
+          {/* Confirmar Contraseña */}
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirmar contraseña"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword}
+              editable={!loading}
+            />
+            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              <Ionicons
+                name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
+                size={20}
+                color={Colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
 
-          <Text style={styles.label}>Contraseña *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Mínimo 6 caracteres"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            editable={!loading}
-            placeholderTextColor={Colors.gray}
-          />
-
-          <Text style={styles.label}>Confirmar contraseña *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Repite tu contraseña"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            editable={!loading}
-            placeholderTextColor={Colors.gray}
-          />
-
-          {/* Botón de Registro */}
+          {/* Botón Registrar */}
           <TouchableOpacity
-            style={[
-              styles.button,
-              loading && styles.buttonDisabled,
-              { backgroundColor: rol === 'agricultor' ? Colors.agricultor : Colors.comprador },
-            ]}
+            style={[styles.registerBtn, !passwordStrength?.isStrong && styles.registerBtnDisabled]}
             onPress={handleRegister}
-            disabled={loading}
+            disabled={loading || !passwordStrength?.isStrong}
           >
             {loading ? (
-              <ActivityIndicator color={Colors.white} />
+              <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Registrarse</Text>
+              <Text style={styles.registerBtnText}>Registrarse</Text>
             )}
           </TouchableOpacity>
+        </View>
 
-          {/* Link a Login */}
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => navigation.goBack()}
-            disabled={loading}
-          >
-            <Text style={styles.linkText}>
-              ¿Ya tienes cuenta?{' '}
-              <Text style={styles.linkTextBold}>Inicia sesión</Text>
-            </Text>
+        {/* Ir a Login */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginLink}>Inicia sesión</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -201,111 +301,80 @@ export default function RegisterScreen({ navigation }) {
   );
 }
 
+// Componente para mostrar requisitos
+function RequirementCheck({ label, met }) {
+  return (
+    <View style={styles.requirementItem}>
+      <Ionicons
+        name={met ? 'checkmark-circle' : 'close-circle'}
+        size={18}
+        color={met ? '#66BB6A' : '#EF5350'}
+      />
+      <Text style={[styles.requirementText, { color: met ? '#66BB6A' : '#EF5350' }]}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 20,
-    paddingTop: 40,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  emoji: {
-    fontSize: 50,
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: Colors.primary,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-  },
-  form: {
-    width: '100%',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.gray,
-    backgroundColor: Colors.white,
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  rolContainer: {
+  container: { flex: 1, backgroundColor: Colors.background },
+  scrollContent: { flexGrow: 1, padding: 20 },
+  header: { marginBottom: 30, alignItems: 'center' },
+  title: { fontSize: 32, fontWeight: 'bold', color: Colors.comprador, marginBottom: 8 },
+  subtitle: { fontSize: 18, color: Colors.textSecondary },
+  form: { marginBottom: 20 },
+  inputContainer: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    borderRadius: 8,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#e0e0e0'
   },
-  rolButton: {
+  input: { flex: 1, marginHorizontal: 8, fontSize: 16 },
+  rolContainer: { marginBottom: 16 },
+  rolLabel: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary, marginBottom: 8 },
+  rolButtons: { flexDirection: 'row', gap: 12 },
+  rolBtn: {
     flex: 1,
-    padding: 15,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: Colors.gray,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 6
   },
-  rolButtonActiveComprador: {
+  rolBtnActive: { backgroundColor: Colors.comprador },
+  rolBtnText: { fontSize: 14, color: Colors.textSecondary, fontWeight: '600' },
+  rolBtnTextActive: { color: '#fff' },
+  strengthContainer: { backgroundColor: '#f9f9f9', padding: 12, borderRadius: 8, marginBottom: 16 },
+  strengthBar: {
+    height: 6,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 8
+  },
+  strengthBarFill: { height: '100%' },
+  strengthText: { fontSize: 13, fontWeight: 'bold', marginBottom: 12 },
+  requirementsContainer: { gap: 6 },
+  requirementItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  requirementText: { fontSize: 12 },
+  registerBtn: {
     backgroundColor: Colors.comprador,
-    borderColor: Colors.comprador,
-  },
-  rolButtonActiveAgricultor: {
-    backgroundColor: Colors.agricultor,
-    borderColor: Colors.agricultor,
-  },
-  rolButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.textPrimary,
-  },
-  rolButtonTextActive: {
-    color: Colors.white,
-  },
-  button: {
     padding: 16,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: 'center',
-    marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 16
   },
-  buttonDisabled: {
-    backgroundColor: Colors.gray,
-  },
-  buttonText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  linkButton: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  linkText: {
-    color: Colors.textSecondary,
-    fontSize: 16,
-  },
-  linkTextBold: {
-    color: Colors.primary,
-    fontWeight: 'bold',
-  },
+  registerBtnDisabled: { opacity: 0.5 },
+  registerBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 20 },
+  footerText: { color: Colors.textSecondary },
+  loginLink: { color: Colors.comprador, fontWeight: 'bold' }
 });
