@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.100.11:5000/api';
+const API_BASE_URL = 'https://ecosdelcampobackend.onrender.com/api';
 
 export const ENDPOINTS = {
   LOGIN: `${API_BASE_URL}/auth/login`,

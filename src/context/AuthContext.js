@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import { ENDPOINTS } from '../constants/endpoints';
 
-axios.defaults.timeout = 15000;
+axios.defaults.timeout = 90000;
 
 const AuthContext = createContext();
 

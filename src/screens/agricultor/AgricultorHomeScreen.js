@@ -14,7 +14,7 @@ import Colors from '../../constants/colors';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 
-const API_URL = 'http://192.168.100.11:5000'; // ← TU URL del servidor (según server.js)
+const API_URL = 'https://ecosdelcampobackend.onrender.com/api';  // ← URL de producción
 
 // Configurar el header de navegación
 AgricultorHomeScreen.navigationOptions = ({ navigation }) => ({
@@ -46,11 +46,11 @@ export default function AgricultorHomeScreen({ navigation }) {
   const fetchStats = async () => {
     try {
       console.log('🔄 Obteniendo estadísticas...');
-      console.log('📍 URL:', `${API_URL}/api/orders/agricultor/stats`);
+      console.log('📍 URL:', `${API_URL}/orders/agricultor/stats`);
       console.log('🔑 Token:', token?.substring(0, 20) + '...');
       
       const response = await axios.get(
-        `${API_URL}/api/orders/agricultor/stats`,
+        `${API_URL}/orders/agricultor/stats`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
